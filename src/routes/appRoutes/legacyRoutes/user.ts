@@ -2,6 +2,13 @@ import { LegacyRoute } from '../../LegacyRoute';
 
 export const LEGACY_USER_ROUTES: LegacyRoute[] = [
     {
+        path: 'voucher.html',
+        pageProps: {
+            controller: 'session/voucher/index',
+            view: 'session/voucher/index.html'
+        }
+    },
+    {
         path: 'details',
         pageProps: {
             controller: 'itemDetails/index',

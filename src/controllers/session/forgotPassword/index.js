@@ -38,6 +38,8 @@ function processForgotPasswordResult(result) {
 
 export default function (view) {
     function onSubmit(e) {
+        console.log(ApiClient);
+
         ApiClient.ajax({
             type: 'POST',
             url: ApiClient.getUrl('Users/ForgotPassword'),

@@ -2,6 +2,13 @@ import { LegacyRoute } from '../../LegacyRoute';
 
 export const LEGACY_PUBLIC_ROUTES: LegacyRoute[] = [
     {
+        path: 'signup.html',
+        pageProps: {
+            controller: 'session/signup/index',
+            view: 'session/signup/index.html'
+        }
+    },
+    {
         path: 'addserver.html',
         pageProps: {
             controller: 'session/addServer/index',

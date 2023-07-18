@@ -69,7 +69,7 @@ export async function serverAddress() {
         return responses.filter(obj => obj?.config);
     }).then(configs => {
         const selection = configs.find(obj => !obj.config.StartupWizardCompleted) || configs[0];
-        return selection?.url;
+        return selection?.url || 'http://localhost:8096';
     }).catch(error => {
         console.error(error);
     });
@@ -91,9 +91,7 @@ export function onServerChanged(_userId, _accessToken, apiClient) {
 
 export function logout() {
     ServerConnections.logout().then(function () {
-        webSettings.getMultiServer().then(multi => {
-            multi ? navigate('selectserver.html') : navigate('login.html');
-        });
+        navigate('login.html');
     });
 }
 

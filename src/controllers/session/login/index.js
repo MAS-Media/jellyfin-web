@@ -22,12 +22,22 @@ const enableFocusTransform = !browser.slow && !browser.edge;
 
 function authenticateUserByName(page, apiClient, username, password) {
     loading.show();
-    apiClient.authenticateUserByName(username, password).then(function (result) {
+    apiClient.ajax({
+        type: 'POST',
+        url: 'http://localhost:3600/auth/login',
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            Username: username,
+            Pw: password
+        })
+    }).then(function(result) {
         const user = result.User;
         loading.hide();
 
+        apiClient.setAuthenticationInfo(result.AccessToken, user.Id);
         onLoginSuccessful(user.Id, result.AccessToken, apiClient);
-    }, function (response) {
+    }, function(response) {
         page.querySelector('#txtManualPassword').value = '';
         loading.hide();
 
@@ -46,7 +56,7 @@ function authenticateUserByName(page, apiClient, username, password) {
 
 function authenticateQuickConnect(apiClient) {
     const url = apiClient.getUrl('/QuickConnect/Initiate');
-    apiClient.ajax({ type: 'POST', url }, true).then(res => res.json()).then(function (json) {
+    apiClient.ajax({ type: 'POST', url }, true).then(res => res.json()).then(function(json) {
         if (!json.Secret || !json.Code) {
             console.error('Malformed quick connect response', json);
             return false;
@@ -78,7 +88,7 @@ function authenticateQuickConnect(apiClient) {
 
                 const result = await apiClient.quickConnect(data.Secret);
                 onLoginSuccessful(result.User.Id, result.AccessToken, apiClient);
-            }, function (e) {
+            }, function(e) {
                 clearInterval(interval);
 
                 // Close the QuickConnect dialog
@@ -110,7 +120,7 @@ function authenticateQuickConnect(apiClient) {
 
 function onLoginSuccessful(id, accessToken, apiClient) {
     Dashboard.onServerChanged(id, accessToken, apiClient);
-    Dashboard.navigate('home.html');
+    Dashboard.navigate('voucher.html');
 }
 
 function showManualForm(context, showCancel, focusPassword) {
@@ -183,7 +193,7 @@ function loadUserList(context, apiClient, users) {
     context.querySelector('#divUsers').innerHTML = html;
 }
 
-export default function (view, params) {
+export default function(view, params) {
     function getApiClient() {
         const serverId = params.serverid;
 
@@ -204,7 +214,7 @@ export default function (view, params) {
         });
     }
 
-    view.querySelector('#divUsers').addEventListener('click', function (e) {
+    view.querySelector('#divUsers').addEventListener('click', function(e) {
         const card = dom.parentWithClass(e.target, 'card');
         const cardContent = card ? card.querySelector('.cardContent') : null;
 
@@ -226,31 +236,24 @@ export default function (view, params) {
             }
         }
     });
-    view.querySelector('.manualLoginForm').addEventListener('submit', function (e) {
+    view.querySelector('.manualLoginForm').addEventListener('submit', function(e) {
         appSettings.enableAutoLogin(view.querySelector('.chkRememberLogin').checked);
         const apiClient = getApiClient();
         authenticateUserByName(view, apiClient, view.querySelector('#txtManualName').value, view.querySelector('#txtManualPassword').value);
         e.preventDefault();
         return false;
     });
-    view.querySelector('.btnForgotPassword').addEventListener('click', function () {
-        Dashboard.navigate('forgotpassword.html');
+    view.querySelector('.btnSignUp').addEventListener('click', function() {
+        Dashboard.navigate('signup.html');
+        console.log('clicked!');
     });
     view.querySelector('.btnCancel').addEventListener('click', showVisualForm);
-    view.querySelector('.btnQuick').addEventListener('click', function () {
-        const apiClient = getApiClient();
-        authenticateQuickConnect(apiClient);
-        return false;
-    });
-    view.querySelector('.btnManual').addEventListener('click', function () {
+    view.querySelector('.btnManual').addEventListener('click', function() {
         view.querySelector('#txtManualName').value = '';
         showManualForm(view, true);
     });
-    view.querySelector('.btnSelectServer').addEventListener('click', function () {
-        Dashboard.selectServer();
-    });
 
-    view.addEventListener('viewshow', function () {
+    view.addEventListener('viewshow', function() {
         loading.show();
         libraryMenu.setTransparentMenu(true);
 
@@ -270,7 +273,7 @@ export default function (view, params) {
                 console.debug('Failed to get QuickConnect status');
             });
 
-        apiClient.getPublicUsers().then(function (users) {
+        apiClient.getPublicUsers().then(function(users) {
             if (users.length) {
                 showVisualForm();
                 loadUserList(view, apiClient, users);
@@ -278,10 +281,10 @@ export default function (view, params) {
                 view.querySelector('#txtManualName').value = '';
                 showManualForm(view, false, false);
             }
-        }).catch().then(function () {
+        }).catch().then(function() {
             loading.hide();
         });
-        apiClient.getJSON(apiClient.getUrl('Branding/Configuration')).then(function (options) {
+        apiClient.getJSON(apiClient.getUrl('Branding/Configuration')).then(function(options) {
             const loginDisclaimer = view.querySelector('.loginDisclaimer');
 
             loginDisclaimer.innerHTML = DOMPurify.sanitize(marked(options.LoginDisclaimer || ''));
@@ -299,8 +302,7 @@ export default function (view, params) {
             }
         });
     });
-    view.addEventListener('viewhide', function () {
+    view.addEventListener('viewhide', function() {
         libraryMenu.setTransparentMenu(false);
     });
 }
-
